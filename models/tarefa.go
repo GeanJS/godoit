@@ -18,4 +18,3 @@ func (t *Tarefa) CriaTarefa(descricao string) {
 	t.FinalizadaEm = time.Time{}
 }
 
-
