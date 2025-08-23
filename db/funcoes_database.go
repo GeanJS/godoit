@@ -3,6 +3,7 @@ package db
 import (
 	"database/sql"
 	"godoit/models"
+	"log"
 )
 
 func SalvaTarefa(db *sql.DB, tarefa models.Tarefa) error {
@@ -13,3 +14,21 @@ func SalvaTarefa(db *sql.DB, tarefa models.Tarefa) error {
 	return err
 }
 
+func ListaTodasTarefas(db *sql.DB) ([]models.Tarefa, error) {
+	rows, err := db.Query("SELECT * FROM tarefas")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer rows.Close()
+
+	var tarefas []models.Tarefa
+	for rows.Next() {
+		var t models.Tarefa
+		if err := rows.Scan(&t.ID, &t.Descricao, &t.Status, &t.CriadaEm, &t.FinalizadaEm); err != nil {
+			log.Fatal(err)
+		}
+		tarefas = append(tarefas, t)
+
+	}
+	return tarefas, nil
+}

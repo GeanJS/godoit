@@ -33,7 +33,36 @@ func main() {
 			
 		},
 	}
+	cmdList := &cobra.Command{
+		Use: "list",
+		Short: "Lista as tarefas",
+		Long: "Lista todas as tarefas registradas",
+		Run: func(cmd *cobra.Command, args []string) {
+			conn := db.Conecta()
+			defer conn.Close()
+			tarefas, err := db.ListaTodasTarefas(conn)
+			if err != nil {
+				fmt.Println(err)
+			}
+
+			for _,t := range tarefas {
+				statusStr := "✗"
+				if t.Status == true {
+					statusStr = "✓"
+				}
+				criada := t.CriadaEm.Time.Format("2/01/2006 15:04")
+				finalizada := ""
+				if t.FinalizadaEm.Valid {
+					finalizada = t.FinalizadaEm.Time.Format("2/01/2006 15:04")
+				}
+
+				fmt.Printf("[%s] %-3d | %-30s | Criada: %-16s | Finalizada: %-16s\n",
+					statusStr, t.ID, t.Descricao, criada, finalizada)
+			}
+		},
+	}
 	rootCmd.AddCommand(cmdAdd)
+	rootCmd.AddCommand(cmdList)
 
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)
