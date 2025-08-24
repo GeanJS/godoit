@@ -86,6 +86,11 @@ func main() {
 		Use: "mark",
 		Short: "altera o status de uma tarefa",
 		Long: "altera o status de uma tarefa, tanto para concluida ou não concluida",
+	}
+	cmdDone := &cobra.Command{
+		Use: "done",
+		Short: "finalizada uma tarefa",
+		Long: "altera o status da tarefa para finalizado e marca o horario de finalização",
 		Run: func(cmd *cobra.Command, args []string) {
 			conn := db.Conecta()
 			defer conn.Close()
@@ -102,14 +107,35 @@ func main() {
 			if err != nil {
 				fmt.Println(err)
 			}
-
 		},
+	}
+	cmdUndone := &cobra.Command{
+		Use: "undone",
+		Short: "retira o status de finalizado",
+		Long: "altera o status de uma tarefa finalizada, e retira a hora de finalização",
+		Run: func(cmd *cobra.Command, args []string) {
+			conn := db.Conecta()
+			defer conn.Close()
 
+			stringIndex := args[0]
+			id, err := strconv.Atoi(stringIndex)
+			if err != nil {
+				fmt.Println(err)
+			}
+			t := models.Tarefa{}
+			t.DesfazFinalizacao()
+			err = db.AlteraTarefa(conn, id, t)
+			if err != nil {
+				fmt.Println(err)
+			}
+		},
 	}
 	rootCmd.AddCommand(cmdAdd)
 	rootCmd.AddCommand(cmdList)
 	rootCmd.AddCommand(cmdDel)
 	rootCmd.AddCommand(cmdUpdate)
+	cmdUpdate.AddCommand(cmdDone)
+	cmdUpdate.AddCommand(cmdUndone)
 
 
 	if err := rootCmd.Execute(); err != nil {
