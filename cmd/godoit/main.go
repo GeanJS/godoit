@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"godoit/db"
 	"godoit/models"
+	"godoit/utils"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/spf13/cobra"
 )
@@ -27,7 +29,7 @@ func main() {
 		Run: func(cmd *cobra.Command, args []string) {
 			conn := db.Conecta()
 			defer conn.Close()
-			descricao := args[0]
+			descricao := strings.Join(args, " ")
 			t := models.Tarefa{}
 			t.CriaTarefa(descricao)
 			db.SalvaTarefa(conn, t)
@@ -38,6 +40,11 @@ func main() {
 		Use: "list",
 		Short: "Lista as tarefas",
 		Long: "Lista todas as tarefas registradas",
+	}
+	cmdListAll := &cobra.Command{
+		Use: "all",
+		Short: "lista todas as tarefas",
+		Long: "lista todas as tarefas independente do status atual delas",
 		Run: func(cmd *cobra.Command, args []string) {
 			conn := db.Conecta()
 			defer conn.Close()
@@ -45,21 +52,35 @@ func main() {
 			if err != nil {
 				fmt.Println(err)
 			}
-
-			for _,t := range tarefas {
-				statusStr := "✗"
-				if t.Status {
-					statusStr = "✓"
-				}
-				criada := t.CriadaEm.Time.Format("2/01/2006 15:04")
-				finalizada := ""
-				if t.FinalizadaEm.Valid {
-					finalizada = t.FinalizadaEm.Time.Format("2/01/2006 15:04")
-				}
-
-				fmt.Printf("[%s] %-3d | %-30s | Criada: %-16s | Finalizada: %-16s\n",
-					statusStr, t.ID, t.Descricao, criada, finalizada)
+			utils.FormataTarefa(tarefas)
+		},
+	}
+	cmdListDone := &cobra.Command{
+		Use: "done",
+		Short: "lista apenas as tarefas finalizadas",
+		Long: "lista apenas as tarefas que já estejam com o status de finalizadas",
+		Run: func(cmd *cobra.Command, args []string) {
+			conn := db.Conecta()
+			defer conn.Close()
+			tarefas, err := db.ListaTarefasFinalizadas(conn)
+			if err != nil {
+				fmt.Println(err)
 			}
+			utils.FormataTarefa(tarefas)
+		},
+	}
+	cmdListUndone := &cobra.Command{
+		Use: "undone",
+		Short: "lista apenas tarefas não finalizas",
+		Run: func(cmd *cobra.Command, args []string) {
+			conn := db.Conecta()
+			defer conn.Close()
+
+			tarefas, err := db.ListaTarefasNaoFinalizadas(conn)
+			if err != nil {
+				fmt.Println(err)
+			}
+			utils.FormataTarefa(tarefas)
 		},
 	}
 	cmdDel := &cobra.Command{
@@ -75,10 +96,18 @@ func main() {
 			if err != nil {
 				fmt.Println(err)
 			}
-			
-			err = db.DeletaTarefa(conn, id)
-			if err == nil {
+
+			fmt.Printf("realmente deseja deletar a tarefa %d? (y/n)", id)
+			var input string
+			fmt.Scanf("%s", &input)
+			if err != nil {
 				fmt.Println(err)
+			}
+			if input == "y" || input == "yes" {
+				err = db.DeletaTarefa(conn, id)
+				if err == nil {
+					fmt.Println(err)
+				}
 			}
 		},
 	}
@@ -130,10 +159,14 @@ func main() {
 			}
 		},
 	}
+
 	rootCmd.AddCommand(cmdAdd)
 	rootCmd.AddCommand(cmdList)
 	rootCmd.AddCommand(cmdDel)
 	rootCmd.AddCommand(cmdUpdate)
+	cmdList.AddCommand(cmdListAll)
+	cmdList.AddCommand(cmdListDone)
+	cmdList.AddCommand(cmdListUndone)
 	cmdUpdate.AddCommand(cmdDone)
 	cmdUpdate.AddCommand(cmdUndone)
 
