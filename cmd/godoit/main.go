@@ -33,6 +33,7 @@ func main() {
 			t := models.Tarefa{}
 			t.CriaTarefa(descricao)
 			db.SalvaTarefa(conn, t)
+			fmt.Println("Tarefa adicionada com sucesso")
 			
 		},
 	}
