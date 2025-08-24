@@ -23,10 +23,15 @@ func (t *Tarefa) CriaTarefa(descricao string) {
 	t.FinalizadaEm = sql.NullTime{Valid: false}
 }
 
-func (t * Tarefa) Finaliza() {
+func (t *Tarefa) Finaliza() {
 	t.Status = true
 	t.FinalizadaEm = sql.NullTime{
 		Time: time.Now(),
 		Valid: true,
 	}
+}
+
+func (t *Tarefa) DesfazFinalizacao() {
+	t.Status = false
+	t.FinalizadaEm = sql.NullTime{Valid: false}
 }

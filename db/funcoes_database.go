@@ -32,3 +32,17 @@ func ListaTodasTarefas(db *sql.DB) ([]models.Tarefa, error) {
 	}
 	return tarefas, nil
 }
+
+func DeletaTarefa(db *sql.DB, indice int) error {
+	_, err := db.Exec("DELETE FROM tarefas where id = ?", indice)
+	return err
+}
+
+func AlteraTarefa(db *sql.DB, indice int, t models.Tarefa) error {
+	_, err := db.Exec(`UPDATE tarefas 
+		SET status = ?, finalizada_em = ?
+		WHERE id = ?`,
+		t.Status, t.FinalizadaEm, indice)
+	return err
+	
+}
