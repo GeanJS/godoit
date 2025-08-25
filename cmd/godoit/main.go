@@ -106,7 +106,7 @@ func main() {
 			}
 			if input == "y" || input == "yes" {
 				err = db.DeletaTarefa(conn, id)
-				if err == nil {
+				if err != nil {
 					fmt.Println(err)
 				}
 			}
